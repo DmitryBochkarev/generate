@@ -22,6 +22,7 @@ if (process.env.TEMPLATE_DIR) {
   TEMPLATE_DIR = HOME + "/.templates";
 }
 
+require('coffee-script');
 conf = require(path.resolve(TEMPLATE_DIR, "./" + argv._[0] + "/conf"));
 
 var allparams = true;
