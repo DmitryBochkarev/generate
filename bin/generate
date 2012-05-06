@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+var util = require('util');
+var argv = require('optimist')
+  .usage(
+    "Usage: generate generator output_dir template_name [template_options]" +
+    "\nsample:" +
+    "\n generate batmanjs ./public/js app --app=HelloWorld" +
+    "\n export TEMPLATE_DIR=~/my_templates generate mygen /tmp test"
+  )
+  .check(function(argv) {
+    return argv._[0] && argv._[1] && argv._[2]
+  })
+  .argv;
+var Template = require('../index');
+
+var template = new Template(argv._[0], argv._[1], argv._[2], argv);
+template.write();
