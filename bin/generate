@@ -8,7 +8,7 @@ var argv = require('optimist')
     "\n export TEMPLATE_DIR=~/my_templates generate mygen /tmp test"
   )
   .check(function(argv) {
-    return argv._[0] && argv._[1] && argv._[2]
+    return !!(argv._[0] && argv._[1] && argv._[2])
   })
   .argv;
 var Template = require('../index');
