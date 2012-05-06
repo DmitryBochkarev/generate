@@ -1,7 +1,7 @@
 generate
 ========
 
-This tool p rovide way for generate "anything" from templates.
+This tool provide way for generate "anything" from templates.
 
 Templates repository: [https://github.com/DmitryBochkarev/.templates](https://github.com/DmitryBochkarev/.templates)
 
@@ -12,15 +12,17 @@ usage
 
 `$ generate generator output_dir template_name [template_options]`
 
-exaples
-=======
+examples
+========
 
-`$ generate batmanjs ./public/js controller --app=Hello --controller=World`
+`$ mkdir /tmp/controllers`
+
+`$ generate batmanjs /tmp/controllers controller --app=Hello --controller=World`
 
     Create file:
-    /tmp/world_controller.coffee
+    /tmp/controllers/world_controller.coffee
 
-`cat /tmp/world_controller.coffee`
+`$ cat /tmp/controllers/world_controller.coffee`
 
     class Hello.WorldController extends Batman.Controller
 

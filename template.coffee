@@ -2,6 +2,7 @@ global.ejs = require 'ejs'
 fs = require 'fs'
 path = require 'path'
 mkdirp = require 'mkdirp'
+async = require 'async'
 
 HOME = process.env.HOME
 TEMPLATE_DIR = if process.env.TEMPLATE_DIR
@@ -15,32 +16,51 @@ module.exports = class Template
     @options = @conf.templates[template]
     @single = !!(@options.file)
 
-  write: ->
+  write: (done) ->
     if @single
-      if @options.dir
-        console.log("Create directory:")
-        dir = path.resolve process.cwd(), @outputDir, ejs.render(@options.dir, @params)
-        mkdirp.sync dir
-        console.log dir
-      @writeOne @options.file, @options.output
+      async.series [
+        (done) =>
+          if @options.dir
+            dir = path.resolve process.cwd(), @outputDir, ejs.render(@options.dir, @params)
+            console.log "Create directory: #{dir}"
+            mkdirp dir, done()
+          else
+            done()
+
+        (done) =>
+          @writeOne @options.file, @options.output, done
+      ], (done || ->)
     else
-      for dir in @options.dirs
-        console.log("Create directory:")
-        _dir = path.resolve process.cwd(), @outputDir, ejs.render(dir, @params)
-        mkdirp.sync _dir
-        console.log(_dir)
-      for file in @options.files
-        @writeOne file[0], file[1]
+      async.series [
+        (done) =>
+          if @options.dirs
+            f = (dir, done) =>
+              _dir = path.resolve process.cwd(), @outputDir, ejs.render(dir, @params)
+              console.log "Create directory: #{_dir}"
+              mkdirp _dir, done
+
+            async.forEach @options.dirs, f, done
+          else
+            done()
+        (done) =>
+          f = (file, done) =>
+            @writeOne file[0], file[1], done
+
+          async.forEach @options.files, f, done
+      ], (done || ->)
+
     this
 
-  writeOne: (templateFile, outputFile) ->
+  writeOne: (templateFile, outputFile, done) ->
     filename = ejs.render(outputFile, @params)
     outputFilename = path.resolve(process.cwd(), @outputDir, filename)
-    template = fs.readFileSync(path.resolve(TEMPLATE_DIR, "./#{@generator}/#{templateFile}"), 'utf8')
-    content = ejs.render(template, @params)
-    console.log("Create file:")
-    fs.writeFileSync(outputFilename, content, 'utf8')
-    console.log(outputFilename)
+    file = path.resolve TEMPLATE_DIR, "./#{@generator}/#{templateFile}"
+    fs.readFile file, 'utf8', (err, template) =>
+      return done(err) if err
+
+      content = ejs.render(template, @params)
+      console.log "Create file: #{outputFilename}"
+      fs.writeFile outputFilename, content, 'utf8', done
 
 # Custom filters
 ejs.filters.underscore = (str) ->
