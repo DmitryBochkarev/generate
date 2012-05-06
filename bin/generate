@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-var util = require('util');
+var path = require('path');
+var async = require('async');
 var argv = require('optimist')
   .usage(
     "Usage: generate generator output_dir template_name [template_options]" +
@@ -11,7 +12,68 @@ var argv = require('optimist')
     return !!(argv._[0] && argv._[1] && argv._[2])
   })
   .argv;
-var Template = require('../index');
 
-var template = new Template(argv._[0], argv._[1], argv._[2], argv);
-template.write();
+var HOME = process.env.HOME;
+var TEMPLATE_DIR;
+
+if (process.env.TEMPLATE_DIR) {
+  TEMPLATE_DIR = path.resolve(process.cwd(), process.env.TEMPLATE_DIR);
+} else {
+  TEMPLATE_DIR = HOME + "/.templates";
+}
+
+conf = require(path.resolve(TEMPLATE_DIR, "./" + argv._[0] + "/conf"));
+
+var allparams = true;
+var template = conf.templates[argv._[2]];
+
+if (!template) {
+  throw new Error("Template " + argv._[2] + " not exist");
+}
+
+if (template.params) {
+  Object.keys(template.params).forEach(function(param) {
+    if (!argv[param]) {allparams = false};
+  });
+}
+
+async.series([
+  function(done) {
+    if (allparams) {
+      return done();
+    }
+
+    var readline = require('readline');
+    var i = readline.createInterface(process.stdin, process.stdout, null);
+    var ask = function (param, done) {
+      if (argv[param]) {
+        return done();
+      }
+      i.question("Please enter " + template.params[param] + ": ", function(answer) {
+        argv[param] = answer;
+        done();
+      });
+    };
+
+    async.forEachSeries(Object.keys(template.params), ask, function(err) {
+      i.close();
+      process.stdin.destroy();
+      done(err);
+    });
+  },
+  function(done) {
+    var Template = require('../index');
+
+    var template = new Template(conf, TEMPLATE_DIR, argv._[0], argv._[1], argv._[2], argv);
+
+    template.write(function(err) {
+      if (err) {
+        throw err;
+      }
+
+      console.log("done");
+      done();
+    });
+  }
+])
+

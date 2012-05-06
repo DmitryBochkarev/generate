@@ -4,15 +4,8 @@ path = require 'path'
 mkdirp = require 'mkdirp'
 async = require 'async'
 
-HOME = process.env.HOME
-TEMPLATE_DIR = if process.env.TEMPLATE_DIR
-  path.resolve(process.cwd(), process.env.TEMPLATE_DIR)
-else
-  "#{HOME}/.templates"
-
 module.exports = class Template
-  constructor: (@generator, @outputDir, @template, @params = {}) ->
-    @conf = require(path.resolve(TEMPLATE_DIR, "./#{generator}/conf"))
+  constructor: (@conf, @templateDir, @generator, @outputDir, @template, @params = {}) ->
     @options = @conf.templates[template]
     @single = !!(@options.file)
 
@@ -54,7 +47,7 @@ module.exports = class Template
   writeOne: (templateFile, outputFile, done) ->
     filename = ejs.render(outputFile, @params)
     outputFilename = path.resolve(process.cwd(), @outputDir, filename)
-    file = path.resolve TEMPLATE_DIR, "./#{@generator}/#{templateFile}"
+    file = path.resolve @templateDir, "./#{@generator}/#{templateFile}"
     fs.readFile file, 'utf8', (err, template) =>
       return done(err) if err
 
