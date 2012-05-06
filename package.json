@@ -1,7 +1,7 @@
 {
   "author": "Dmitry Bochkarev <dimabochkarev@gmail.com>",
   "name": "generate",
-  "description": "Generate barbone from custom template",
+  "description": "Generate \"all\" from custom template",
   "version": "0.0.1",
   "dependencies": {
     "ejs": ">= 0.0.1",
@@ -9,6 +9,11 @@
     "coffee-script": ">= 1.3.1",
     "mkdirp": ">= 0.3.0"
   },
+  "main": ".index",
+  "bin": {
+    "generate": "./bin/generate"
+  },
+
   "devDependencies": {},
   "optionalDependencies": {},
   "engines": {
